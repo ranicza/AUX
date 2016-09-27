@@ -12,21 +12,25 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.stream.Stream;
 
+/**
+ * This producer sends messages to topic "user-logs".
+ * 
+ * @author Maryna_Maroz
+ *
+ */
 public class Producer {
-public static final String PARAMS_ERROR = "Usage: producer <file_path>";
+
+	public static final String TOPIC = "t-topic";
+	public static final String PARAMS_ERROR = "Usage: producer <file_path>";
+
 	
     public static void main(String[] args) throws IOException {
-    	
-    	if (args.length < 2) {
-			System.err.println(PARAMS_ERROR);
-			System.exit(2);
-		}
-    	
-        Path path = new Path(args[1]);
-    	BufferedReader br = null;
-    	FileSystem fs = null;
     	
         // Set up the producer
         KafkaProducer<String, String> producer;
@@ -36,26 +40,44 @@ public static final String PARAMS_ERROR = "Usage: producer <file_path>";
             producer = new KafkaProducer<>(properties);
         }
 
-    	try{
-    		fs = FileSystem.get(new Configuration());
-			br = new BufferedReader(new InputStreamReader(fs.open(path)));	
-			System.out.println("starts reading file");
-			String line = br.readLine();
-			while(line != null) {
-				producer.send(new ProducerRecord<String, String>("fast-messages", line));
-				producer.send(new ProducerRecord<String, String>("summary-markers", line));
-				System.out.println("send message:" + line);
-				line = br.readLine();
-			}
-    				
-    	} catch (IOException e) {
-    		System.out.println("Exception while reading file: " + e.getMessage());
-    	}
-    	catch (Throwable e) {
-          System.out.println(e.getMessage());
-      } finally {
-    	  System.out.println("FINISH!!!");
-          producer.close();
-      }
+        try(Stream<java.nio.file.Path> paths = Files.walk(Paths.get(args[0]))) {
+            paths.forEach(filePath -> {
+                if (Files.isRegularFile(filePath)) {
+                    try(Stream<String> lines = Files.lines(filePath, Charset.forName("ISO-8859-1"))) {
+                        lines.forEach(line ->{
+                            producer.send(new ProducerRecord<>(TOPIC, line));
+                            System.out.println("SEND: " + line);
+                        });
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+        } finally {
+        	System.out.println("FINISH!");
+            producer.close();
+        }
+        
+//    	try{
+//    		fs = FileSystem.get(new Configuration());
+//			br = new BufferedReader(new InputStreamReader(fs.open(path)));	
+//			System.out.println("starts reading file");
+//			String line = br.readLine();
+//			while(line != null) {
+//				producer.send(new ProducerRecord<String, String>("logs-messages", line));
+//				producer.send(new ProducerRecord<String, String>("summary-markers", line));
+//				System.out.println("send message:" + line);
+//				line = br.readLine();
+//			}
+//    				
+//    	} catch (IOException e) {
+//    		System.out.println("Exception while reading file: " + e.getMessage());
+//    	}
+//    	catch (Throwable e) {
+//          System.out.println(e.getMessage());
+//      } finally {
+//    	  System.out.println("FINISH!!!");
+//          producer.close();
+//      }
     }
 }
