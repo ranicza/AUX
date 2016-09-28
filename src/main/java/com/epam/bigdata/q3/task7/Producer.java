@@ -24,13 +24,14 @@ public class Producer {
 	public static final String TOPIC = "logTags2";
 	public static final String SEND = "SEND: ";
 	public static final String ISO = "ISO-8859-1";	
+	public static final String PROPERTIES = "producer.props";	
 	public static final String PARAMS_ERROR = "Usage: producer <file_path>";
 	
     public static void main(String[] args) throws IOException {
     	
         // Set up the producer
         KafkaProducer<String, String> producer;
-        try (InputStream props = Resources.getResource("producer.props").openStream()) {
+        try (InputStream props = Resources.getResource(PROPERTIES).openStream()) {
             Properties properties = new Properties();
             properties.load(props);
             producer = new KafkaProducer<>(properties);
@@ -53,27 +54,5 @@ public class Producer {
         	System.out.println("FINISH!");
             producer.close();
         }
-        
-//    	try{
-//    		fs = FileSystem.get(new Configuration());
-//			br = new BufferedReader(new InputStreamReader(fs.open(path)));	
-//			System.out.println("starts reading file");
-//			String line = br.readLine();
-//			while(line != null) {
-//				producer.send(new ProducerRecord<String, String>("logs-messages", line));
-//				producer.send(new ProducerRecord<String, String>("summary-markers", line));
-//				System.out.println("send message:" + line);
-//				line = br.readLine();
-//			}
-//    				
-//    	} catch (IOException e) {
-//    		System.out.println("Exception while reading file: " + e.getMessage());
-//    	}
-//    	catch (Throwable e) {
-//          System.out.println(e.getMessage());
-//      } finally {
-//    	  System.out.println("FINISH!!!");
-//          producer.close();
-//      }
     }
 }

@@ -26,7 +26,7 @@ public class TagsInterceptor implements Interceptor{
     private static final String PATH_FILE = "/tmp/admin/hw7/user.profile.tags.us.tag.txt";
     private static final String PATH = "hdfs://sandbox.hortonworks.com:8020";
     private static final String TAB = "\\t";
-    private static final String HEADER_EVENT_DATE = "event_date";
+    private static final String HEADER_EVENT_DATE = "tms_date";
     private static final String HEADER_TAGS = "tags";
     private static final String TRUE = "true";
     private static final String FALSE ="false";
@@ -41,29 +41,29 @@ public class TagsInterceptor implements Interceptor{
         log.info("Interceptor initialized.");
     }
 
-    @Override
-    public Event intercept(Event event) {
-        Map<String, String> headers = event.getHeaders();
-        String body = new String(event.getBody());
-        List<String> fields = null;
-        
-        if (StringUtils.isNotEmpty(body) && StringUtils.isNotBlank(body)) {
-        	fields = new ArrayList<>(Arrays.asList(body.split(TAB)));
+	@Override
+	public Event intercept(Event event) {
+		List<String> fields = null;
+		Map<String, String> headers = event.getHeaders();
+		String body = new String(event.getBody());
 
-        	// Get event date for partition
-            String dateEvent = fields.get(1).substring(0, 8);
-            headers.put(HEADER_EVENT_DATE, dateEvent);
+		if (StringUtils.isNotEmpty(body) && StringUtils.isNotBlank(body)) {
+			fields = new ArrayList<>(Arrays.asList(body.split(TAB)));
 
-            String tagsId = fields.get(fields.size() - 2);
-            String userTags = tags.getOrDefault(tagsId, EMPTY);
-            headers.put(HEADER_TAGS, StringUtils.isNotBlank(userTags) ? TRUE : FALSE);
-            fields.add(userTags);
+			String tagsId = fields.get(fields.size() - 2);
+			String userTags = tags.getOrDefault(tagsId, EMPTY);
+			headers.put(HEADER_TAGS, StringUtils.isNotBlank(userTags) ? TRUE : FALSE);
+			fields.add(userTags);
 
-            event.setHeaders(headers);
-            event.setBody(String.join(DELIMETER, fields).getBytes());
-        }
-        return event;
-    }
+			// Get event date for partition
+			String dateEvent = fields.get(1).substring(0, 8);
+			headers.put(HEADER_EVENT_DATE, dateEvent);
+
+			event.setHeaders(headers);
+			event.setBody(String.join(DELIMETER, fields).getBytes());
+		}
+		return event;
+	}
 
     @Override
     public java.util.List<Event> intercept(java.util.List<Event> events) {
