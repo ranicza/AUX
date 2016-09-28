@@ -14,14 +14,14 @@ import java.util.Properties;
 import java.util.stream.Stream;
 
 /**
- * This producer sends messages to topic "l-topic".
+ * This producer sends messages to topic "logTags2".
  * 
  * @author Maryna_Maroz
  *
  */
 public class Producer {
 
-	public static final String TOPIC = "l-topic";
+	public static final String TOPIC = "logTags2";
 	public static final String SEND = "SEND: ";
 	public static final String ISO = "ISO-8859-1";	
 	public static final String PARAMS_ERROR = "Usage: producer <file_path>";
